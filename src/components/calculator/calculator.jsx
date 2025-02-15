@@ -1,13 +1,10 @@
 import React, { useRef, useState } from 'react'
-import "./calculator.css"
+import './calculator.css'
 
-
-const Calculator =React.memo (() => {
+const Calculator = React.memo(() => {
   const refInputNum1 = useRef()
   const refInputOperacion = useRef()
-  console.log("uee")
   const [resultados, setResultado] = useState([])
-
   let num1
 
   const enviarNum1 = (event) => {
@@ -35,10 +32,10 @@ const Calculator =React.memo (() => {
         setResultado([...resultados, num1 / num2])
         break
       case '%':
-        setResultado([...resultados, (num1 * num2/ 100)] )
+        setResultado([...resultados, (num1 * num2) / 100])
         break
     }
-     refInputNum1.current.value = ''
+    refInputNum1.current.value = ''
   }
 
   return (
@@ -52,14 +49,24 @@ const Calculator =React.memo (() => {
         <button onClick={(e) => enviarNum1(e)}>%</button>
         <button onClick={() => operar()}>=</button>
       </div>
-      <div className='resultados'>
-        {resultados.map((resultado, index) => {
-          if(index===(resultados.length-1)){
-          return <><p key={index}>{resultado}</p><p>Ultimo resultado:</p></>
-          }else if(index===(resultados.length-2)){
-            return <><p key={index}>{resultado}</p><p>Ultimos resultados:</p></>
-          }else{return <p key={index}>{resultado}</p>}
-        })}
+      <div key='resultados' className='resultados'>
+        <p>ultimo resultado :{resultados[resultados.length - 1]}</p>
+
+        {resultados
+          .slice(0, -1)
+          .sort((a, b) => a - b)
+          .map((resultado, index) => {
+            if (index === 0) {
+              return (
+                <React.Fragment key={index}>
+                  <p>Ultimos resultados:</p>
+                  <p>{resultado}</p>
+                </React.Fragment>
+              )
+            } else {
+              return <p key={index}>{resultado}</p>
+            }
+          })}
       </div>
     </div>
   )
