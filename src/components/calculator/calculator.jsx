@@ -1,75 +1,120 @@
-import React, { useRef, useState } from 'react'
+import React, { useReducer, useRef, useMemo } from 'react'
 import './calculator.css'
 
+const initialState = {
+  n1: 0,
+  operador: '',
+  resultado: '',
+  resultados: [],
+  resultadosOrdenados: []
+}
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_NUM1':
+      console.log(action.payload.operador)
+      return {
+        ...state,
+        n1: parseInt(action.payload.inputValue),
+        operador: action.payload.operador
+      }
+    case 'CALCULAR':
+      console.log(action.payload)
+      return {
+        ...state,
+        resultado: action.payload,
+        resultados: [...state.resultados, action.payload]
+      }
+    case 'ORDENAR':
+      return {
+        ...state,
+        resultadosOrdenados: [action.payload]
+      }
+  }
+}
+
 const Calculator = React.memo(() => {
-  const refInputNum1 = useRef()
-  const refInputOperacion = useRef()
-  const [resultados, setResultado] = useState([])
-  let num1
+  const [state, dispatch] = useReducer(reducer, initialState)
 
-  const enviarNum1 = (event) => {
-    num1 = parseFloat(refInputNum1.current.value)
-    refInputNum1.current.value = ''
-    refInputOperacion.current = event.target
+  const { n1, resultado, operador, resultados, resultadosOrdenados } = state
+
+  const refInputNum = useRef()
+
+  const setNum1 = (operador) => {
+    dispatch({
+      type: 'SET_NUM1',
+      payload: { inputValue: refInputNum.current.value, operador: operador }
+    })
+    refInputNum.current.value = ''
   }
 
-  const operar = () => {
-    if (!num1) {
-      return
-    }
-    const num2 = parseFloat(refInputNum1.current.value)
-    switch (refInputOperacion.current.textContent) {
-      case '+':
-        setResultado([...resultados, num1 + num2])
-        break
-      case '-':
-        setResultado([...resultados, num1 - num2])
-        break
-      case '*':
-        setResultado([...resultados, num1 * num2])
-        break
-      case '/':
-        setResultado([...resultados, num1 / num2])
-        break
-      case '%':
-        setResultado([...resultados, (num1 * num2) / 100])
-        break
-    }
-    refInputNum1.current.value = ''
-  }
+  useMemo(() => {
+    console.log(resultados)
+    dispatch({
+      type: 'ORDENAR',
+      payload: resultados.toSorted((a, b) => a - b)
+    })
+  }, [resultados])
 
   return (
     <div className='calculator'>
       <div className='operadores'>
-        <input type='number' ref={refInputNum1} className='input' />
-        <button onClick={(e) => enviarNum1(e)}>+</button>
-        <button onClick={(e) => enviarNum1(e)}>-</button>
-        <button onClick={(e) => enviarNum1(e)}>*</button>
-        <button onClick={(e) => enviarNum1(e)}>/</button>
-        <button onClick={(e) => enviarNum1(e)}>%</button>
-        <button onClick={() => operar()}>=</button>
-      </div>
-      <div key='resultados' className='resultados'>
-        <p>ultimo resultado :{resultados[resultados.length - 1]}</p>
-
-        {resultados
-          .slice(0, -1)
-          .sort((a, b) => a - b)
-          .map((resultado, index) => {
-            if (index === 0) {
-              return (
-                <React.Fragment key={index}>
-                  <p>Ultimos resultados:</p>
-                  <p>{resultado}</p>
-                </React.Fragment>
-              )
-            } else {
-              return <p key={index}>{resultado}</p>
-            }
-          })}
+        <input type='number' ref={refInputNum} className='input' />
+        <button onClick={() => setNum1('+')}>+</button>
+        <button onClick={() => setNum1('-')}>-</button>
+        <button onClick={() => setNum1('*')}>*</button>
+        <button onClick={() => setNum1('/')}>/</button>
+        <button onClick={() => setNum1('%')}>%</button>
+        <button onClick={() => calcular(operador, n1, refInputNum, dispatch)}>
+          =
+        </button>
+        </div>
+        <p> Ultimo resultado : {resultado}</p>
+        <div className='resultados_ordenados'>
+        <h2>Resultados históricos</h2>
+        {resultadosOrdenados.map((resultH, index) => (
+          <h3 id='resultados' key={index}>{resultH}</h3>
+        ))}
       </div>
     </div>
   )
 })
+
+const calcular = (operador, n1, inputN2, dispatch) => {
+  switch (operador) {
+    case '+':
+      dispatch({
+        type: 'CALCULAR',
+        payload: n1 + parseInt(inputN2.current.value)
+      })
+      break
+    case '-':
+      dispatch({
+        type: 'CALCULAR',
+        payload: n1 - parseInt(inputN2.current.value)
+      })
+      break
+    case '*':
+      dispatch({
+        type: 'CALCULAR',
+        payload: n1 * parseInt(inputN2.current.value)
+      })
+      break
+    case '/':
+      dispatch({
+        type: 'CALCULAR',
+        payload: n1 / parseInt(inputN2.current.value)
+      })
+      break
+    case '%':
+      dispatch({
+        type: 'CALCULAR',
+        payload: n1 % parseInt(inputN2.current.value)
+      })
+      break
+    default:
+  }
+  inputN2.current.value = ''
+}
 
 export default Calculator
